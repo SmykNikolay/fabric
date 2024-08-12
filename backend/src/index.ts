@@ -1,20 +1,35 @@
-import { AppDataSource } from "./data-source"
-import { User } from "./entity/User"
+import { AppDataSource } from "./data-source";
+import * as express from "express";
+import { createErrorHandlerChain } from "./middleware/errorHandler";
+import * as dotenv from "dotenv";
+import { NextFunction, Request, Response } from "express";
+import * as cors from "cors";
 
-AppDataSource.initialize().then(async () => {
+// import { userRouter } from "./routes/user.routes";
 
-    console.log("Inserting a new user into the database...")
-    const user = new User()
-    user.firstName = "Timber"
-    user.lastName = "Saw"
-    user.age = 25
-    await AppDataSource.manager.save(user)
-    console.log("Saved a new user with id: " + user.id)
+import "reflect-metadata";
+dotenv.config();
 
-    console.log("Loading users from the database...")
-    const users = await AppDataSource.manager.find(User)
-    console.log("Loaded users: ", users)
+const app = express();
+app.use(express.json());
+app.use(cors());
+const errorHandlerChain = createErrorHandlerChain();
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  errorHandlerChain.handle(err, req, res, next);
+});
 
-    console.log("Here you can setup and run express / fastify / any other framework.")
+const { PORT = 3000 } = process.env;
+// app.use("/auth", userRouter);
 
-}).catch(error => console.log(error))
+app.get("*", (req: Request, res: Response) => {
+  res.status(505).json({ message: "Bad Request" });
+});
+
+AppDataSource.initialize()
+  .then(async () => {
+    app.listen(PORT, () => {
+      console.log("Server is running on http://localhost:" + PORT);
+    });
+    console.log("Data Source has been initialized!");
+  })
+  .catch((error) => console.log(error));
