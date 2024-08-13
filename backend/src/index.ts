@@ -5,7 +5,8 @@ import * as dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import * as cors from "cors";
 
-// import { userRouter } from "./routes/user.routes";
+import { userRouter } from "./routes/user.routes";
+import { productRouter } from "./routes/product.routes";
 
 import "reflect-metadata";
 dotenv.config();
@@ -19,7 +20,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 const { PORT = 3000 } = process.env;
-// app.use("/auth", userRouter);
+
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).json({ message: "Welcome to the E-commerce API" });
+});
+
+app.use("/auth", userRouter);
+app.use("/api/products", productRouter);
 
 app.get("*", (req: Request, res: Response) => {
   res.status(505).json({ message: "Bad Request" });
